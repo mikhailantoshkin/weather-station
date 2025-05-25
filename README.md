@@ -8,16 +8,16 @@ Shows current weather in Tokyo with 10 minutes intervals.
 
 For dev environment setups consult [relevant section of the book](https://esp32.implrust.com/dev-env.html).
 
-In shor you'll need:
+In short you'll need:
 
-- A few tools
+A few tools
 
 ```
 cargo install cargo-binstall esp-generate
 cargo binstall espflash
 ```
 
-- Toolchain
+A toolchain
 
 ```
 cargo install espup
