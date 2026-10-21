@@ -1,0 +1,6 @@
+# You'll need to subscribe at https://openweathermap.org/price. It's
+# free for <1k req/day.
+export API_KEY=<openweathermap-api-key>
+export SSID="<your-wifi-ssid>"
+export PASSWORD="<your-wifi-password"
+# cat ~/export-esp.sh >> .envrc
