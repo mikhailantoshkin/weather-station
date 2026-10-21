@@ -8,7 +8,7 @@ Shows current weather in Tokyo with 10 minutes intervals.
 
 For dev environment setups consult [relevant section of the book](https://esp32.implrust.com/dev-env.html).
 
-In shor you'll need:
+In short, you'll need:
 
 - A few tools
 
@@ -24,10 +24,10 @@ cargo install espup
 espup install
 ```
 
-NB: don't forget to populate your env with
-
+- Env (don't forget to set relevant variables)
 ```
-. ~/export-esp.sh
+cp .envrc.example .envrc
+cat ~/export-esp.sh >> .envrc
 ```
 
 ## WSL2
