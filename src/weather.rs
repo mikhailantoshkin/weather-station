@@ -1,14 +1,16 @@
+use core::ffi::CStr;
+
 use chrono::{DateTime, Utc};
 use defmt::info;
 use embassy_net::{
+    Stack,
     dns::DnsSocket,
     tcp::client::{TcpClient, TcpClientState},
-    Stack,
 };
 use heapless::{String, Vec};
 use reqwless::{
-    client::{HttpClient, TlsConfig},
     TlsReference,
+    client::{HttpClient, TlsConfig},
 };
 use serde::Deserialize;
 use serde_repr::Deserialize_repr;
@@ -45,13 +47,12 @@ impl WeatherApi {
 
         let tls_config = TlsConfig::new(
             reqwless::TlsVersion::Tls1_2,
-            reqwless::Certificates {
-                ca_chain: reqwless::X509::pem(
-                    concat!(include_str!("./ca_cert.pem"), "\0").as_bytes(),
-                )
-                .ok(),
-                ..Default::default()
-            },
+            reqwless::Certificate::new(reqwless::X509::PEM(
+                CStr::from_bytes_until_nul(concat!(include_str!("./ca_cert.pem"), "\0").as_bytes())
+                    .unwrap(),
+            ))
+            .expect("failed to create pem cert"),
+            None,
             tls_reference,
         );
 

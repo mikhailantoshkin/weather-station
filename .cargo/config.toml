@@ -1,8 +1,8 @@
+# Keep compilation settings in this file and user/runtime settings in `esp-config.toml`.
+include = ["esp-config.toml"]
+
 [target.xtensa-esp32-none-elf]
 runner = "espflash flash --monitor --chip esp32 --log-format defmt"
-
-[env]
-DEFMT_LOG="info"
 
 [build]
 rustflags = [

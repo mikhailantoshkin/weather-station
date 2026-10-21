@@ -1,19 +1,17 @@
-use chrono::{DateTime, Datelike, Utc};
 use core::fmt::Write;
-use esp_mbedtls::Tls;
 
+use chrono::{DateTime, Datelike, Utc};
+use defmt::info;
+use embassy_net::Stack;
+use embassy_time::{Delay, Duration, Timer};
 use embedded_graphics::{
     image::Image,
     mono_font::MonoTextStyle,
     prelude::*,
     primitives::{Line, PrimitiveStyle, PrimitiveStyleBuilder, Rectangle},
 };
-
-use defmt::info;
-use embassy_net::Stack;
-use embassy_time::{Delay, Duration, Timer};
 use embedded_graphics::{
-    mono_font::{ascii::FONT_10X20, MonoTextStyleBuilder},
+    mono_font::{MonoTextStyleBuilder, ascii::FONT_10X20},
     prelude::Point,
     text::{Baseline, Text},
 };
@@ -26,29 +24,31 @@ use epd_waveshare::{
 };
 use esp_hal::{
     gpio::{Input, Output},
-    peripherals::{RSA, SHA},
+    rng::Trng,
     spi::master::Spi,
 };
 use heapless::String;
+use mbedtls_rs::Tls;
 use profont::{PROFONT_18_POINT, PROFONT_24_POINT};
 use reqwless::TlsReference;
 use tinybmp::Bmp;
 
+use super as lib;
 use crate::{icons::ICONS, weather::WeatherApi};
 
 type SpiDevice = ExclusiveDevice<Spi<'static, esp_hal::Blocking>, Output<'static>, Delay>;
-type EPD = Epd1in54<SpiDevice, Input<'static>, Output<'static>, Output<'static>, Delay>;
+type Epd = Epd1in54<SpiDevice, Input<'static>, Output<'static>, Output<'static>, Delay>;
 const DISPLAY_REFRESH_DELAY: Duration = Duration::from_secs(2);
 
 pub struct Dashboard {
     display: Display1in54,
     wifi: Stack<'static>,
-    epd: EPD,
+    epd: Epd,
     spi_dev: SpiDevice,
 }
 
 impl Dashboard {
-    pub fn new(wifi: Stack<'static>, epd: EPD, spi_dev: SpiDevice) -> Self {
+    pub fn new(wifi: Stack<'static>, epd: Epd, spi_dev: SpiDevice) -> Self {
         Self {
             display: Display1in54::default(),
             wifi,
@@ -57,12 +57,11 @@ impl Dashboard {
         }
     }
 
-    pub async fn start(&mut self, sha: SHA, rsa: RSA) {
+    pub async fn start(&mut self) {
         self.display.set_rotation(DisplayRotation::Rotate90);
+        let trng = lib::mk_static!(Trng, Trng::try_new().unwrap());
 
-        let tls = Tls::new(sha)
-            .expect("TLS::new with peripherals.SHA failed")
-            .with_hardware_rsa(rsa);
+        let tls = Tls::new(trng).expect("TLS::new with peripherals.SHA failed");
 
         let api = WeatherApi::new(self.wifi);
         loop {
@@ -228,13 +227,8 @@ impl Dashboard {
         let text_width = text.len() as i32 * char_width;
         let text_x = rect_x + (rect_width - text_width) / 2;
 
-        Text::with_baseline(
-            text,
-            Point::new(text_x as i32, rect_y),
-            text_style,
-            Baseline::Top,
-        )
-        .draw(&mut self.display)
-        .unwrap();
+        Text::with_baseline(text, Point::new(text_x, rect_y), text_style, Baseline::Top)
+            .draw(&mut self.display)
+            .unwrap();
     }
 }
